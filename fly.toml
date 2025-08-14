@@ -1,0 +1,20 @@
+# Fly.io config
+app = "realbot-trench"
+primary_region = "cdg"
+
+[env]
+  PYTHONUNBUFFERED = "1"
+  # TRACKER_STORE tells the bot where to persist the JSON state
+  TRACKER_STORE = "/data/tracker_state.json"
+
+# We use a Dockerfile, so no [build] needed here.
+
+[mounts]
+  source = "tracker_data"
+  destination = "/data"
+
+# Machines VM sizing (adjust as you like)
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512
