@@ -16,6 +16,7 @@ import random
 import aiohttp
 from datetime import datetime, timezone
 from typing import Awaitable, Callable, Dict, List, Tuple, Optional
+from pathlib import Path
 
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.constants import ParseMode, ChatMemberStatus
@@ -286,14 +287,21 @@ async def cmd_commandes(update: Update, context: ContextTypes.DEFAULT_TYPE, args
         "• <code>!dex</code> — ce que signifie « payer le DEX » (bannière + réseaux sociaux, ≈1.5 SOL)",
         "• <code>!fees</code> — slippage/priority/bribe conseillés",
         "• <code>!bond</code> — explication de la migration (bond vers DEX)\n• <code>!convert</code> — conversions USD/EUR ⇄ SOL/ETH/AVAX/BASE/BTC/USDT/USDC",
-        
         "\n<b>⚠️ Warning</b>",
         "• <code>!pnl</code> — mise en garde sur les cartes PnL (fausses captures, manipulations, etc.)",
         " \n<b>📒 Tutos</b>",
         "• <code>!tuto</code> (hub)\n• <code>!roadmap</code> — parcours conseillé",
         "• <code>!premierspas</code>, <code>!lexique</code> (alias <code>!lx</code>), <code>!bcurve</code> (alias <code>!bondingcurve</code>, <code>!bc</code>), <code>!mev</code>, <code>!tutoaxiom</code>, <code>!debutant</code>, <code>!tracker</code>, <code>!sniprug</code>",
-        "\n<b>🛠️ Utilitaires</b>",
-        "• <code>!setrules</code> (admin), <code>!vote</code>, <code>!riskcalc</code> (MC)",
+        "\n<b>🛰️ Tracker (Wallet temps réel)</b>",
+        "• <code>!watch &lt;adresse&gt; [alias]</code> (alias <code>!wallet</code>) — suivre un wallet (image en haut, CA copiable, ticker/nom)",
+        "• <code>!unwatch &lt;adresse&gt;</code> — arrêter le suivi",
+        "• <code>!unwatchall</code> — vider tout",
+        "• <code>!list</code> — liste compacte | <code>!listdetail</code> — alias, date, launchonly, minSOL",
+        "• <code>!setrpc &lt;http_url&gt;</code> — endpoint HTTP (pour <i>getTransaction</i>)",
+        "• <code>!setws &lt;wss_url&gt;</code> — endpoint WebSocket (sinon auto à partir du HTTP)",
+        "• <code>!launchonly &lt;adresse&gt; on|off</code> — notifier seulement la <u>première</u> fois par token",
+        "• <code>!minsol &lt;adresse&gt; &lt;montant_SOL&gt;</code> — filtrer les achats &lt; seuil de SOL",
+        "• <code>!silent on/off</code> — notifications silencieuses (par chat)",
     ]
     await reply(update, "\n".join(lines))
 
@@ -879,34 +887,12 @@ if __name__ == "__main__":
 # TRACKER (Wallet real-time)
 # PID-less, images, launchonly, minSOL, silent, aliases
 # =========================
-import os, re, json, asyncio, logging
-from datetime import datetime, timezone
-from typing import Dict, List
 import aiohttp
 from telegram import Update
 from telegram.ext import Application, ContextTypes
 
 # Fallbacks if the host bot doesn't define them (won't override if already present)
-try:
-    logger
-except NameError:
-    logger = logging.getLogger("tracker")
-    if not logger.handlers:
-        logging.basicConfig(level=logging.INFO)
 
-try:
-    reply
-except NameError:
-    async def reply(update: Update, text: str):
-        await update.message.reply_text(text, parse_mode="HTML", disable_web_page_preview=True)
-
-try:
-    register_command
-except NameError:
-    def register_command(name: str, help_text: str = "", aliases: List[str] = None):
-        def deco(func):
-            return func
-        return deco
 
 # ── Persistence ───────────────────────────────────────────────────────────────
 TRACKER_STORE = os.getenv("TRACKER_STORE", "./tracker_state.json")
@@ -1298,7 +1284,7 @@ def ensure_ws_loop(app: Application):
         logger.info("Tracker WS loop started.")
 
 # ── Commands (all with "!") ───────────────────────────────────────────────────
-@register_command(name="watch", help_text="!watch <adresse> [alias] — suivre un wallet (temps réel)")
+@register_command(name="watch", help_text="!watch <adresse> [alias] — suivre un wallet (temps réel)", aliases=["wallet"])
 async def cmd_watch(update: Update, context: ContextTypes.DEFAULT_TYPE, args: List[str]):
     st = tracker_chat_state(update.effective_chat.id)
     if not args:
@@ -1461,7 +1447,7 @@ async def cmd_commandes(update: Update, context: ContextTypes.DEFAULT_TYPE, args
         "\n<b>📒 Tutos</b>",
         "• <code>!tuto</code>, <code>!premierspas</code>, <code>!lexique</code>, <code>!bcurve</code>, <code>!mev</code>, <code>!tutoaxiom</code>, <code>!debutant</code>, <code>!tracker</code>, <code>!sniprug</code>",
         "\n<b>🛰️ Tracker (Wallet temps réel)</b>",
-        "• <code>!watch &lt;adresse&gt; [alias]</code> — suivre un wallet (image en haut, CA copiable, ticker/nom)",
+        "• <code>!watch &lt;adresse&gt; [alias]</code> (alias <code>!wallet</code>) — suivre un wallet (image en haut, CA copiable, ticker/nom)",
         "• <code>!unwatch &lt;adresse&gt;</code> — arrêter le suivi",
         "• <code>!unwatchall</code> — vider tout",
         "• <code>!list</code> — liste compacte | <code>!listdetail</code> — alias, date, launchonly, minSOL",
