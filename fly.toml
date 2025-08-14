@@ -1,20 +1,22 @@
-# Fly.io config
-app = "realbot-trench"
-primary_region = "cdg"
+# fly.toml app configuration file generated for trench-bot-beta on 2025-08-14T03:02:07Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-[env]
-  PYTHONUNBUFFERED = "1"
-  # TRACKER_STORE tells the bot where to persist the JSON state
-  TRACKER_STORE = "/data/tracker_state.json"
+app = 'trench-bot-beta'
+primary_region = 'cdg'
 
-# We use a Dockerfile, so no [build] needed here.
+[build]
 
-[mounts]
-  source = "tracker_data"
-  destination = "/data"
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
 
-# Machines VM sizing (adjust as you like)
 [[vm]]
-  cpu_kind = "shared"
+  cpu_kind = 'shared'
   cpus = 1
   memory_mb = 512
